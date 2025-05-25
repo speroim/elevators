@@ -1,103 +1,214 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from "react";
+import { Building } from "./Building";
 
-export default function Home() {
+interface BuildingConfig {
+  buildingId: number;
+  numFloors: number;
+  elevatorCount: number;
+}
+
+function App() {
+  const [buildingCount, setBuildingCount] = useState(1);
+  const [buildings, setBuildings] = useState<any[]>([]);
+  const [selectedBuilding, setSelectedBuilding] = useState<number>(1);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const [buildingConfigs, setBuildingConfigs] = useState<BuildingConfig[]>([
+    { buildingId: 1, numFloors: 15, elevatorCount: 1 },
+  ]);
+
+  useEffect(() => {
+    const newBuildings = [];
+    const newConfigs = [];
+
+    for (let i = 1; i <= buildingCount; i++) {
+      const existingConfig = buildingConfigs.find(
+        (config) => config.buildingId === i
+      );
+      const config = existingConfig || {
+        buildingId: i,
+        numFloors: 15,
+        elevatorCount: 1,
+      };
+
+      newConfigs.push(config);
+      newBuildings.push(
+        new Building({
+          buildingId: i,
+          numFloors: config.numFloors,
+          elevatorCount: config.elevatorCount,
+        })
+      );
+    }
+
+    setBuildingConfigs(newConfigs);
+    setBuildings(newBuildings);
+    console.log(`Created ${buildingCount} buildings`);
+  }, [buildingCount]);
+
+  const updateBuildingConfig = (
+    buildingId: number,
+    numFloors: number,
+    elevatorCount: number
+  ) => {
+    const updatedConfigs = buildingConfigs.map((config) =>
+      config.buildingId === buildingId
+        ? { ...config, numFloors, elevatorCount }
+        : config
+    );
+    setBuildingConfigs(updatedConfigs);
+
+    const updatedBuildings = buildings.map((building) => {
+      if (building.buildingId === buildingId) {
+        return new Building({
+          buildingId,
+          numFloors,
+          elevatorCount,
+        });
+      }
+      return building;
+    });
+    setBuildings(updatedBuildings);
+  };
+
+  const getCurrentBuildingConfig = () => {
+    return (
+      buildingConfigs.find(
+        (config) => config.buildingId === selectedBuilding
+      ) || { buildingId: selectedBuilding, numFloors: 15, elevatorCount: 1 }
+    );
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="app-container p-4">
+      <div className="p-4 text-center my-4 bg-gray-100 rounded-xl">
+        <h2 className="text-xl font-bold mb-4">Elevator Management System</h2>
+        <div className="mb-4">
+          <span className="mr-4 font-semibold">
+            Choose number of buildings:
+          </span>
+          {[1, 2, 3, 4, 5].map((count) => (
+            <button
+              key={count}
+              onClick={() => setBuildingCount(count)}
+              className={`py-2 px-4 rounded mx-2 cursor-pointer transition-colors ${
+                buildingCount === count
+                  ? "bg-blue-500 text-white"
+                  : "bg-white text-black hover:bg-gray-200"
+              }`}
+            >
+              {count}
+            </button>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="bg-green-500 text-white py-2 px-6 rounded hover:bg-green-600 transition-colors"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          {showSettings ? "Hide Settings" : "Building Settings"}
+        </button>
+      </div>
+
+      {showSettings && (
+        <div className="settings-panel bg-gray-50 p-4 rounded-xl mb-4 border">
+          <h3 className="text-lg font-bold mb-4">Building Configuration</h3>
+
+          <div className="mb-4">
+            <label className="block font-semibold mb-2">
+              Select Building to Configure:
+            </label>
+            <select
+              value={selectedBuilding}
+              onChange={(e) => setSelectedBuilding(Number(e.target.value))}
+              className="border border-gray-300 rounded px-3 py-2 bg-white"
+            >
+              {Array.from({ length: buildingCount }, (_, i) => i + 1).map(
+                (id) => (
+                  <option key={id} value={id}>
+                    Building {id}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-semibold mb-2">
+                Number of Floors (max 100):
+              </label>
+              <input
+                type="number"
+                value={getCurrentBuildingConfig().numFloors}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value <= 100 && value >= 1) {
+                    updateBuildingConfig(
+                      selectedBuilding,
+                      value,
+                      getCurrentBuildingConfig().elevatorCount
+                    );
+                  }
+                }}
+                max={100}
+                min={1}
+                className="border border-gray-300 rounded px-3 py-2 w-full bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold mb-2">
+                Number of Elevators:
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4].map((count) => (
+                  <button
+                    key={count}
+                    onClick={() =>
+                      updateBuildingConfig(
+                        selectedBuilding,
+                        getCurrentBuildingConfig().numFloors,
+                        count
+                      )
+                    }
+                    className={`py-2 px-4 rounded cursor-pointer transition-colors ${
+                      getCurrentBuildingConfig().elevatorCount === count
+                        ? "bg-blue-500 text-white"
+                        : "bg-white text-black hover:bg-gray-200 border"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="buildings-container">
+        <div
+          className={`grid gap-4 ${
+            buildingCount === 1
+              ? "grid-cols-1"
+              : buildingCount === 2
+              ? "grid-cols-1 lg:grid-cols-2"
+              : buildingCount <= 3
+              ? "grid-cols-1 lg:grid-cols-3"
+              : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+          }`}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {buildings.map((building, index) => (
+            <div key={building.buildingId} className="building-wrapper">
+              {building.render()}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
+
+export default App;
